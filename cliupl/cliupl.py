@@ -6,6 +6,7 @@ import importlib
 PLUGIN_DIR = 'plugins'
 DEFAULT_UPLSITE = 'tiikoni'
 
+
 class UplSitePlugin:
     """
     Abstract class for a upload site
@@ -14,10 +15,6 @@ class UplSitePlugin:
     def upload(self, img_file, args):
         raise NotImplementedError(
             f'Class {self.__class__.__name__} doesnt implement upload()')
-
-    def parse_args(self, arg_group):
-        raise NotImplementedError(
-            f'Class {self.__class__.__name__} doesnt implement set_args()')
 
 
 def strip_exif(img_file):
@@ -45,7 +42,8 @@ def main():
     if strip:
         strip_exif(img_file)
 
-    plugin = importlib.import_module(plugin_name, package=PLUGIN_DIR)
+    plugin = getattr(importlib.import_module(plugin_name, package=PLUGIN_DIR),
+                     plugin_name.capitialize())()
     plugin.upload(img_file, args)
 
 
