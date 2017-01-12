@@ -7,16 +7,6 @@ PLUGIN_DIR = 'plugins'
 DEFAULT_UPLSITE = 'tiikoni'
 
 
-class UplSitePlugin:
-    """
-    Abstract class for a upload site
-    """
-
-    def upload(self, img_file, args):
-        raise NotImplementedError(
-            f'Class {self.__class__.__name__} doesnt implement upload()')
-
-
 def strip_exif(img_file):
     """
     strip exif data from file using exiftool,
@@ -25,26 +15,34 @@ def strip_exif(img_file):
     pass    # TODO
 
 
-def main():
+def load_plugin(plugin_name):
+    plugin_full_name = PLUGIN_DIR + '.' + plugin_name
+    return getattr(importlib.import_module(plugin_full_name),
+                   plugin_name.capitalize())()
+
+
+def get_args():
     arg_parser = argparse.ArgumentParser(description='A command line image uploader')
     arg_parser.add_argument('--img-file', required=True, type=str,
                             help='Image to upload')
     arg_parser.add_argument('--site', default=DEFAULT_UPLSITE, required=False, type=str,
                             help='Specify a upload site plugin')
-    arg_parser.add_argument('--strip', action='set_true', required=False, type=str,
-                            help='Strip exif data before uploading')
+    arg_parser.add_argument('--strip', action='store_true', required=False, help='Strip exif data before uploading')
+    return arg_parser.parse_known_args()
 
-    args = arg_parser.parse_known_args()
+
+def main():
+    args = get_args()
     img_file = args[0].img_file
     plugin_name = args[0].site
-    strip = args[0].strip_exif
+    strip = args[0].strip
 
     if strip:
         strip_exif(img_file)
 
-    plugin = getattr(importlib.import_module(plugin_name, package=PLUGIN_DIR),
-                     plugin_name.capitialize())()
-    plugin.upload(img_file, args)
+    plugin = load_plugin(plugin_name)
+    plugin.upload(img_file, args[1])
+
 
 
 if __name__ == '__main__':
