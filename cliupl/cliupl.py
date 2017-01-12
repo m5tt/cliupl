@@ -2,17 +2,21 @@
 
 import argparse
 import importlib
+import subprocess
 
 PLUGIN_DIR = 'plugins'
 DEFAULT_UPLSITE = 'tiikoni'
 
 
-def strip_exif(img_file):
+def scrub_exif(img_file):
     """
     strip exif data from file using exiftool,
-    providing its present
     """
-    pass    # TODO
+
+    try:
+        subprocess.call(['exiftool', '-all=', img_file])
+    except OSError:
+        print('Failed to scrub exif data, is exiftool installed?')
 
 
 def load_plugin(plugin_name):
@@ -27,7 +31,7 @@ def get_args():
                             help='Image to upload')
     arg_parser.add_argument('--site', default=DEFAULT_UPLSITE, required=False, type=str,
                             help='Specify a upload site plugin')
-    arg_parser.add_argument('--strip', action='store_true', required=False, help='Strip exif data before uploading')
+    arg_parser.add_argument('--scrub', action='store_true', required=False, help='Strip exif data before uploading')
     return arg_parser.parse_known_args()
 
 
@@ -35,10 +39,10 @@ def main():
     args = get_args()
     img_file = args[0].img_file
     plugin_name = args[0].site
-    strip = args[0].strip
+    scrub = args[0].scrub
 
-    if strip:
-        strip_exif(img_file)
+    if scrub:
+        scrub_exif(img_file)
 
     plugin = load_plugin(plugin_name)
     plugin.upload(img_file, args[1])
